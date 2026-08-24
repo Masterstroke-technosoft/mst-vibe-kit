@@ -8,6 +8,7 @@ import { TEMPLATES } from "../src/templates.js";
 import { validateProjectName } from "../src/validate.js";
 import { parseArgs } from "../src/args.js";
 import { dirExistsAndNotEmpty } from "../src/fsUtils.js";
+import { pinPackageManager } from "../src/packageManager.js";
 
 function tmpDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "create-mst-app-test-"));
@@ -124,6 +125,22 @@ test("rejects invalid project names", () => {
   assert.equal(validateProjectName("My App").valid, false);
   assert.equal(validateProjectName("").valid, false);
   assert.equal(validateProjectName("my-app").valid, true);
+});
+
+test("pinPackageManager writes a packageManager field turbo can resolve", () => {
+  const root = tmpDir();
+  const targetDir = path.join(root, "my-mst-project");
+  scaffoldProject({ targetDir, projectName: "my-mst-project", templateId: TEMPLATES[0].id });
+
+  // node is always on PATH in this test environment, but npm may not be
+  // depending on how it was invoked — either way pinPackageManager must not
+  // throw, and must fall back to a known-good version if detection fails.
+  pinPackageManager(targetDir, "npm");
+
+  const pkg = JSON.parse(fs.readFileSync(path.join(targetDir, "package.json"), "utf8"));
+  assert.match(pkg.packageManager, /^npm@\d+\.\d+\.\d+$/);
+
+  fs.rmSync(root, { recursive: true, force: true });
 });
 
 test("parses CLI args", () => {

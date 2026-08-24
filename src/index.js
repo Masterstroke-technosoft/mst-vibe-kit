@@ -9,6 +9,7 @@ import { scaffoldProject } from "./copyTemplate.js";
 import { installDependencies } from "./installDeps.js";
 import { isGitAvailable, initGitRepo } from "./git.js";
 import { parseArgs } from "./args.js";
+import { pinPackageManager } from "./packageManager.js";
 
 const HELP = `
 ${pc.bold("create-mst-app")} — scaffold a full-stack MST blockchain project
@@ -81,6 +82,7 @@ export async function run(argv) {
   console.log(pc.green(`✓ Created project ${opts.projectName}`));
 
   fs.copyFileSync(path.join(targetDir, ".env.example"), path.join(targetDir, ".env.local"));
+  pinPackageManager(targetDir, opts.packageManager);
 
   if (!args.skipInstall) {
     console.log(`\nInstalling dependencies with ${pc.bold(opts.packageManager)}...\n`);
