@@ -1,2 +1,16 @@
 packages:
   - "packages/*"
+
+# Native postinstall/build scripts pnpm's supply-chain policy blocks by
+# default. All legitimate: keccak/secp256k1 (Ethereum crypto, via ethers/
+# hardhat), bufferutil/utf-8-validate (ws performance addons, via hardhat's
+# JSON-RPC websocket server), bson and unrs-resolver (transitive deps of
+# hardhat/eslint tooling). Newer pnpm reads this setting from here instead
+# of package.json's "pnpm" field — see https://pnpm.io/settings.
+onlyBuiltDependencies:
+  - bson
+  - bufferutil
+  - keccak
+  - secp256k1
+  - unrs-resolver
+  - utf-8-validate
