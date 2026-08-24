@@ -1,7 +1,7 @@
 "use client";
 
 import { useAccount } from "wagmi";
-import { deployments } from "shared";
+import { deployments } from "{{PROJECT_NAME}}-shared";
 import { mstMainnet } from "@/lib/chains";
 
 export function useProjectToken() {

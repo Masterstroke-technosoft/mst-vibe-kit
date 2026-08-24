@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { copyDir, restoreGitignore } from "./fsUtils.js";
+import { copyDir, restoreDotfiles } from "./fsUtils.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_ROOT = path.join(__dirname, "..", "templates");
@@ -42,15 +42,23 @@ function substitutePlaceholders(dir, replacements) {
   }
 }
 
-export function scaffoldProject({ targetDir, projectName, templateId }) {
+export function scaffoldProject({ targetDir, projectName, templateId, packageManager = "npm" }) {
   fs.mkdirSync(targetDir, { recursive: true });
 
   copyDir(path.join(TEMPLATES_ROOT, "base"), targetDir);
   copyDir(path.join(TEMPLATES_ROOT, "contracts", templateId), targetDir);
 
-  restoreGitignore(targetDir);
+  restoreDotfiles(targetDir);
+
+  // Only pnpm needs (and only pnpm accepts, reliably) the `workspace:`
+  // protocol to resolve the internal `shared` package instead of trying the
+  // public registry first. npm rejects `workspace:` outright
+  // (EUNSUPPORTEDPROTOCOL); npm and yarn classic both already prefer a
+  // matching workspace package for a plain range like "*".
+  const sharedDepRange = packageManager === "pnpm" ? "workspace:*" : "*";
 
   substitutePlaceholders(targetDir, {
     "{{PROJECT_NAME}}": projectName,
+    "{{SHARED_DEP_RANGE}}": sharedDepRange,
   });
 }

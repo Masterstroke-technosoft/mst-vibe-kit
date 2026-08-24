@@ -13,9 +13,9 @@
     "next": "^14.2.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "shared": "*",
+    "{{PROJECT_NAME}}-shared": "{{SHARED_DEP_RANGE}}",
     "viem": "^2.21.19",
-    "wagmi": "^2.12.17"
+    "wagmi": "2.12.17"
   },
   "devDependencies": {
     "@types/node": "^20.16.10",
