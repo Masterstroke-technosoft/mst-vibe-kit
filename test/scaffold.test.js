@@ -64,6 +64,7 @@ for (const template of TEMPLATES) {
       "turbo.json",
       ".env.example",
       ".gitignore",
+      ".npmrc",
       "QUICKSTART.md",
       "packages/contracts/hardhat.config.ts",
       "packages/contracts/package.json",
@@ -80,12 +81,53 @@ for (const template of TEMPLATES) {
       assert.ok(fs.existsSync(path.join(targetDir, rel)), `missing ${rel}`);
     }
 
-    // `gitignore` must be renamed to `.gitignore`, not left as-is
+    // `gitignore`/`npmrc` must be renamed to their dotfile form, not left as-is
     assert.ok(!fs.existsSync(path.join(targetDir, "gitignore")));
+    assert.ok(!fs.existsSync(path.join(targetDir, "npmrc")));
+
+    const npmrc = fs.readFileSync(path.join(targetDir, ".npmrc"), "utf8");
+    assert.match(npmrc, /link-workspace-packages\s*=\s*true/);
+
+    // the internal `shared` package must be published under a project-scoped
+    // name, not the bare "shared" — a real "shared" npm package exists (and
+    // pulls in mongodb/bson), so a plain range on that name can silently
+    // resolve to the registry instead of packages/shared.
+    const sharedPkg = JSON.parse(
+      fs.readFileSync(path.join(targetDir, "packages/shared/package.json"), "utf8")
+    );
+    assert.equal(sharedPkg.name, "my-mst-project-shared");
+
+    const frontendPkg = JSON.parse(
+      fs.readFileSync(path.join(targetDir, "packages/frontend/package.json"), "utf8")
+    );
+    assert.ok("my-mst-project-shared" in frontendPkg.dependencies);
+    assert.ok(!("shared" in frontendPkg.dependencies));
+    // npm rejects the `workspace:` protocol outright (EUNSUPPORTEDPROTOCOL);
+    // this default (no packageManager passed) must produce an npm-safe range.
+    assert.equal(frontendPkg.dependencies["my-mst-project-shared"], "*");
+
+    const nextConfig = fs.readFileSync(
+      path.join(targetDir, "packages/frontend/next.config.js"),
+      "utf8"
+    );
+    assert.match(nextConfig, /transpilePackages:\s*\["my-mst-project-shared"\]/);
 
     // this template's own contracts/tests/hooks landed
     for (const rel of TEMPLATE_SPECIFIC_FILES[template.id] ?? []) {
       assert.ok(fs.existsSync(path.join(targetDir, rel)), `missing ${rel}`);
+    }
+
+    // every hook importing shared state must resolve to the scoped package
+    // name, not the bare "shared" that collides with the registry package
+    for (const rel of TEMPLATE_SPECIFIC_FILES[template.id] ?? []) {
+      if (!rel.startsWith("packages/frontend/hooks/")) continue;
+      const content = fs.readFileSync(path.join(targetDir, rel), "utf8");
+      if (!content.includes("deployments")) continue;
+      assert.ok(
+        content.includes('from "my-mst-project-shared"'),
+        `${rel} should import from the scoped shared package name`
+      );
+      assert.ok(!content.includes('from "shared"'), `${rel} still imports bare "shared"`);
     }
 
     // placeholder substitution ran
@@ -113,6 +155,28 @@ for (const template of TEMPLATES) {
     fs.rmSync(root, { recursive: true, force: true });
   });
 }
+
+test("pnpm projects get the shared dependency pinned with workspace:*", () => {
+  const root = tmpDir();
+  const targetDir = path.join(root, "my-mst-project");
+
+  scaffoldProject({
+    targetDir,
+    projectName: "my-mst-project",
+    templateId: TEMPLATES[0].id,
+    packageManager: "pnpm",
+  });
+
+  const frontendPkg = JSON.parse(
+    fs.readFileSync(path.join(targetDir, "packages/frontend/package.json"), "utf8")
+  );
+  // plain "*" resolves against the public registry first on pnpm and, since
+  // "my-mst-project-shared" doesn't exist there, install fails outright
+  // (ERR_PNPM_MALFORMED_METADATA) instead of linking packages/shared.
+  assert.equal(frontendPkg.dependencies["my-mst-project-shared"], "workspace:*");
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
 
 test("dirExistsAndNotEmpty detects a non-empty target directory", () => {
   const root = tmpDir();

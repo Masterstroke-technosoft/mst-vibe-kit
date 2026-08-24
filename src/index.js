@@ -77,6 +77,7 @@ export async function run(argv) {
     targetDir,
     projectName: path.basename(targetDir),
     templateId: opts.templateId,
+    packageManager: opts.packageManager,
   });
 
   console.log(pc.green(`✓ Created project ${opts.projectName}`));
