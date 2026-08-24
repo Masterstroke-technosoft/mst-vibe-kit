@@ -1,0 +1,37 @@
+{
+  "name": "create-mst-app",
+  "version": "0.1.0",
+  "description": "Scaffold a full-stack MST blockchain project — Hardhat contracts, a Next.js frontend, and testnet/mainnet config baked in.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "create-mst-app": "bin/create-mst-app.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "templates"
+  ],
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "mst",
+    "blockchain",
+    "hardhat",
+    "scaffold",
+    "cli",
+    "create-mst-app"
+  ],
+  "dependencies": {
+    "picocolors": "^1.0.1",
+    "prompts": "^2.4.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PrakharSharma888/mst-vibe-kit.git"
+  }
+}
