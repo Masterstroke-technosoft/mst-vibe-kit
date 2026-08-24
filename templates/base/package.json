@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo run dev --parallel",
+    "dev": "turbo run dev",
     "build": "turbo run build",
     "test": "turbo run test",
     "compile": "turbo run compile",
@@ -22,5 +22,15 @@
   },
   "engines": {
     "node": ">=18.18.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "bson",
+      "bufferutil",
+      "keccak",
+      "secp256k1",
+      "unrs-resolver",
+      "utf-8-validate"
+    ]
   }
 }
