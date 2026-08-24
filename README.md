@@ -41,12 +41,12 @@ package manager (pnpm/npm/yarn), and whether to `git init` — then installs
 dependencies and prints next steps. Non-interactive usage:
 
 ```
-npx create-mst-app my-app --template token --pm pnpm --git --yes
+npx create-mst-app my-app --template defi --pm pnpm --git --yes
 ```
 
 | Flag | Values |
 |---|---|
-| `--template <name>` | `blank`, `token` |
+| `--template <name>` | `blank`, `token`, `rwa`, `defi` |
 | `--pm <manager>` | `pnpm` (default), `npm`, `yarn` |
 | `--git` / `--no-git` | initialize a git repo |
 | `--skip-install` | skip dependency installation |
@@ -58,9 +58,12 @@ npx create-mst-app my-app --template token --pm pnpm --git --yes
 |---|---|---|
 | `blank` | — | Empty Hardhat config + `Hello.sol` example |
 | `token` | MEP-20 | Fungible token with mint/burn roles, full test suite |
+| `rwa` | Permissioned ERC-20 | `RWAShareToken` — whitelist-gated transfers, admin-set NAV (`pricePerShare`), and a burn-to-redeem flow that emits `RedemptionRequested` for off-chain settlement |
+| `defi` | Staking + Vesting | `ProjectToken` (shared ERC-20) + `Staking` (Synthetix-style reward-per-second accumulator, pause-new-stakes) + `Vesting` (linear, per-beneficiary, cliff + revocation) — all three deployed and wired together |
 
-Both use OpenZeppelin base contracts and are non-upgradeable by default.
-`nft`, `staking`, and `marketplace` templates are on the roadmap (see below).
+All templates use OpenZeppelin base contracts (`AccessControl`, `Pausable`,
+`ReentrancyGuard`) and are non-upgradeable by default. `nft` and
+`marketplace` templates are on the roadmap (see below).
 
 ## Built-in scripts (in every generated project)
 
@@ -114,7 +117,8 @@ npm test
 
 - **Phase 1 (this repo today):** CLI, `blank` + `token` templates, Hardhat
   config, basic frontend starter.
-- **Phase 2:** `nft`, `staking`, `marketplace` templates. Plugin system for
-  community templates.
+- **Phase 2 (this repo today):** `rwa` (real-world-asset tokenization) and
+  `defi` (staking + vesting) use-case templates. `nft` and `marketplace`
+  still to come, plus a plugin system for community templates.
 - **Phase 3:** Official `hardhat-mst` plugin with MST-specific helpers.
 - **Phase 4:** A web-based scaffolder alongside the CLI.

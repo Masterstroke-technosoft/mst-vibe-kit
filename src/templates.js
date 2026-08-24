@@ -13,6 +13,20 @@ export const TEMPLATES = [
     standard: "MEP-20",
     description: "Fungible token with mint/burn roles, full test suite",
   },
+  {
+    id: "rwa",
+    title: "rwa",
+    standard: "Permissioned ERC-20",
+    description:
+      "Whitelist-gated share token for real-world-asset tokenization, with NAV pricing and redemption requests",
+  },
+  {
+    id: "defi",
+    title: "defi",
+    standard: "Staking + Vesting",
+    description:
+      "Reward-accruing staking pool and linear token vesting, sharing one project ERC-20",
+  },
 ];
 
 export function getTemplate(id) {

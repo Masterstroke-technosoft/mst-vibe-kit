@@ -13,6 +13,38 @@ function tmpDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "create-mst-app-test-"));
 }
 
+// Files unique to each template overlay — proves the right contracts/hooks
+// actually landed, not just the common base structure.
+const TEMPLATE_SPECIFIC_FILES = {
+  blank: [
+    "packages/contracts/contracts/Hello.sol",
+    "packages/contracts/test/Hello.test.ts",
+    "packages/frontend/hooks/useHello.ts",
+  ],
+  token: [
+    "packages/contracts/contracts/MyToken.sol",
+    "packages/contracts/test/MyToken.test.ts",
+    "packages/frontend/hooks/useToken.ts",
+    "packages/frontend/hooks/useTransfer.ts",
+  ],
+  rwa: [
+    "packages/contracts/contracts/RWAShareToken.sol",
+    "packages/contracts/test/RWAShareToken.test.ts",
+    "packages/frontend/hooks/useRWAToken.ts",
+    "packages/frontend/hooks/useWhitelist.ts",
+    "packages/frontend/hooks/useRedemption.ts",
+  ],
+  defi: [
+    "packages/contracts/contracts/ProjectToken.sol",
+    "packages/contracts/contracts/Staking.sol",
+    "packages/contracts/contracts/Vesting.sol",
+    "packages/contracts/test/Staking.test.ts",
+    "packages/contracts/test/Vesting.test.ts",
+    "packages/frontend/hooks/useStaking.ts",
+    "packages/frontend/hooks/useVesting.ts",
+  ],
+};
+
 for (const template of TEMPLATES) {
   test(`scaffolds the "${template.id}" template`, () => {
     const root = tmpDir();
@@ -49,6 +81,11 @@ for (const template of TEMPLATES) {
 
     // `gitignore` must be renamed to `.gitignore`, not left as-is
     assert.ok(!fs.existsSync(path.join(targetDir, "gitignore")));
+
+    // this template's own contracts/tests/hooks landed
+    for (const rel of TEMPLATE_SPECIFIC_FILES[template.id] ?? []) {
+      assert.ok(fs.existsSync(path.join(targetDir, rel)), `missing ${rel}`);
+    }
 
     // placeholder substitution ran
     const pkg = JSON.parse(fs.readFileSync(path.join(targetDir, "package.json"), "utf8"));
