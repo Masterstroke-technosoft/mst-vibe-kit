@@ -28,6 +28,7 @@
   ],
   "dependencies": {
     "picocolors": "^1.0.1",
+    "pnpm": "^11.24.0",
     "prompts": "^2.4.2"
   },
   "repository": {
