@@ -46,7 +46,7 @@ npx create-mst-app my-app --template defi --pm pnpm --git --yes
 
 | Flag | Values |
 |---|---|
-| `--template <name>` | `blank`, `token`, `rwa`, `defi`, `demo`, `certificate` |
+| `--template <name>` | `blank`, `token`, `rwa`, `defi`, `demo`, `certificate`, `insurance` |
 | `--pm <manager>` | `pnpm` (default), `npm`, `yarn` |
 | `--git` / `--no-git` | initialize a git repo |
 | `--skip-install` | skip dependency installation |
@@ -62,6 +62,7 @@ npx create-mst-app my-app --template defi --pm pnpm --git --yes
 | `defi` | Staking + Vesting | `ProjectToken` (shared ERC-20) + `Staking` (Synthetix-style reward-per-second accumulator, pause-new-stakes) + `Vesting` (linear, per-beneficiary, cliff + revocation) — all three deployed and wired together |
 | `demo` | NFT + MST SDK | `DemoNFT` (ERC-721) with image minting via a Pinata IPFS backend, a wallet/mint/transfer/gallery frontend, and an MST SDK burner-wallet playground |
 | `certificate` | Soulbound ERC-721 | `Certificate` — non-transferable credential NFTs with single and batch issuance, revocation, and a public `/verify/[tokenId]` page with QR-code sharing |
+| `insurance` | Parametric Insurance | `ParametricInsurance` — buy coverage with an on-chain premium quote, an oracle-restricted `submitOracleData` call that pays out automatically when a trigger condition is met, and pool funding/withdrawal controls |
 
 All templates use OpenZeppelin base contracts (`AccessControl`, `Pausable`,
 `ReentrancyGuard`) and are non-upgradeable by default. `marketplace` is on
@@ -120,8 +121,9 @@ npm test
 - **Phase 1 (this repo today):** CLI, `blank` + `token` templates, Hardhat
   config, basic frontend starter.
 - **Phase 2 (this repo today):** `rwa` (real-world-asset tokenization),
-  `defi` (staking + vesting), `demo` (NFT + MST SDK), and `certificate`
-  (on-chain credential verification) use-case templates. `marketplace`
-  still to come, plus a plugin system for community templates.
+  `defi` (staking + vesting), `demo` (NFT + MST SDK), `certificate`
+  (on-chain credential verification), and `insurance` (parametric
+  automation) use-case templates. `marketplace` still to come, plus a
+  plugin system for community templates.
 - **Phase 3:** Official `hardhat-mst` plugin with MST-specific helpers.
 - **Phase 4:** A web-based scaffolder alongside the CLI.

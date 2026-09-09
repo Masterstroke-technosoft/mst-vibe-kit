@@ -41,6 +41,13 @@ export const TEMPLATES = [
     description:
       "Tamper-proof on-chain certificates with single and batch issuance, revocation, and instant QR-code verification",
   },
+  {
+    id: "insurance",
+    title: "insurance",
+    standard: "Parametric Insurance",
+    description:
+      "Self-executing insurance policies that pay out automatically once an oracle reports a trigger condition met, no manual claims",
+  },
 ];
 
 export function getTemplate(id) {
