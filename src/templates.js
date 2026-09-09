@@ -34,6 +34,13 @@ export const TEMPLATES = [
     description:
       "Basic NFT minting with image metadata, MST SDK wallet operations, and a frontend playground",
   },
+  {
+    id: "certificate",
+    title: "certificate",
+    standard: "Soulbound ERC-721",
+    description:
+      "Tamper-proof on-chain certificates with single and batch issuance, revocation, and instant QR-code verification",
+  },
 ];
 
 export function getTemplate(id) {
