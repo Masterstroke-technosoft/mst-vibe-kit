@@ -1,40 +1,40 @@
-
 "use client";
 
 import {
+  useAccount,
   useReadContract,
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
-import { parseAbi, type Address } from "viem";
+import type { Address } from "viem";
+import { deployments } from "{{PROJECT_NAME}}-shared";
+import { mstMainnet } from "@/lib/chains";
 
-const DEMO_NFT_ADDRESS = process.env
-  .NEXT_PUBLIC_DEMO_NFT_ADDRESS as Address;
+type DeployedContract = { address: Address; abi: readonly unknown[] };
 
-const demoNFTAbi = parseAbi([
-  "function name() view returns (string)",
-  "function symbol() view returns (string)",
-  "function totalSupply() view returns (uint256)",
-  "function owner() view returns (address)",
-  "function ownerOf(uint256 tokenId) view returns (address)",
-  "function tokenURI(uint256 tokenId) view returns (string)",
-  "function mint(address to)",
-  "function transferFrom(address from, address to, uint256 tokenId)",
-]);
+function useDemoNFTContract(): DeployedContract | undefined {
+  const { chainId } = useAccount();
+  const network = chainId === mstMainnet.id ? "mainnet" : "testnet";
+  return (deployments as Record<string, any>)[network]?.DemoNFT as
+    | DeployedContract
+    | undefined;
+}
 
 export function useDemoNFT(tokenId?: bigint) {
-  /*
-   * Collection information
-   */
+  const contract = useDemoNFTContract();
+  const enabled = Boolean(contract);
+  const base = contract
+    ? { address: contract.address, abi: contract.abi }
+    : { address: undefined, abi: undefined };
 
   const {
     data: name,
     isLoading: isNameLoading,
     refetch: refetchName,
   } = useReadContract({
-    address: DEMO_NFT_ADDRESS,
-    abi: demoNFTAbi,
+    ...base,
     functionName: "name",
+    query: { enabled },
   });
 
   const {
@@ -42,9 +42,9 @@ export function useDemoNFT(tokenId?: bigint) {
     isLoading: isSymbolLoading,
     refetch: refetchSymbol,
   } = useReadContract({
-    address: DEMO_NFT_ADDRESS,
-    abi: demoNFTAbi,
+    ...base,
     functionName: "symbol",
+    query: { enabled },
   });
 
   const {
@@ -52,9 +52,9 @@ export function useDemoNFT(tokenId?: bigint) {
     isLoading: isTotalSupplyLoading,
     refetch: refetchTotalSupply,
   } = useReadContract({
-    address: DEMO_NFT_ADDRESS,
-    abi: demoNFTAbi,
+    ...base,
     functionName: "totalSupply",
+    query: { enabled },
   });
 
   const {
@@ -62,14 +62,20 @@ export function useDemoNFT(tokenId?: bigint) {
     isLoading: isOwnerLoading,
     refetch: refetchOwner,
   } = useReadContract({
-    address: DEMO_NFT_ADDRESS,
-    abi: demoNFTAbi,
+    ...base,
     functionName: "owner",
+    query: { enabled },
   });
 
-  /*
-   * Individual NFT information
-   */
+  const {
+    data: isPaused,
+    isLoading: isPausedLoading,
+    refetch: refetchPaused,
+  } = useReadContract({
+    ...base,
+    functionName: "paused",
+    query: { enabled },
+  });
 
   const {
     data: tokenOwner,
@@ -77,13 +83,10 @@ export function useDemoNFT(tokenId?: bigint) {
     isError: isTokenOwnerError,
     refetch: refetchTokenOwner,
   } = useReadContract({
-    address: DEMO_NFT_ADDRESS,
-    abi: demoNFTAbi,
+    ...base,
     functionName: "ownerOf",
     args: tokenId !== undefined ? [tokenId] : undefined,
-    query: {
-      enabled: tokenId !== undefined,
-    },
+    query: { enabled: enabled && tokenId !== undefined },
   });
 
   const {
@@ -92,29 +95,19 @@ export function useDemoNFT(tokenId?: bigint) {
     isError: isTokenURIError,
     refetch: refetchTokenURI,
   } = useReadContract({
-    address: DEMO_NFT_ADDRESS,
-    abi: demoNFTAbi,
+    ...base,
     functionName: "tokenURI",
     args: tokenId !== undefined ? [tokenId] : undefined,
-    query: {
-      enabled: tokenId !== undefined,
-    },
+    query: { enabled: enabled && tokenId !== undefined },
   });
-
-  /*
-   * Write operations
-   */
 
   const {
     data: writeData,
     writeContract,
     isPending: isWritePending,
     error: writeError,
+    reset: resetWrite,
   } = useWriteContract();
-
-  /*
-   * Transaction confirmation
-   */
 
   const {
     isLoading: isConfirming,
@@ -124,98 +117,86 @@ export function useDemoNFT(tokenId?: bigint) {
     hash: writeData,
   });
 
-  /*
-   * Mint NFT
-   */
-
-  const mint = (to: Address) => {
+  const mint = (to: Address, tokenURI_: string) => {
+    if (!contract) return;
     writeContract({
-      address: DEMO_NFT_ADDRESS,
-      abi: demoNFTAbi,
+      address: contract.address,
+      abi: contract.abi,
       functionName: "mint",
-      args: [to],
+      args: [to, tokenURI_],
     });
   };
 
-  /*
-   * Transfer NFT
-   */
-
-  const transfer = (
-    from: Address,
-    to: Address,
-    tokenIdToTransfer: bigint,
-  ) => {
+  const transfer = (from: Address, to: Address, tokenIdToTransfer: bigint) => {
+    if (!contract) return;
     writeContract({
-      address: DEMO_NFT_ADDRESS,
-      abi: demoNFTAbi,
+      address: contract.address,
+      abi: contract.abi,
       functionName: "transferFrom",
-      args: [
-        from,
-        to,
-        tokenIdToTransfer,
-      ],
+      args: [from, to, tokenIdToTransfer],
+    });
+  };
+
+  const pause = () => {
+    if (!contract) return;
+    writeContract({
+      address: contract.address,
+      abi: contract.abi,
+      functionName: "pause",
+    });
+  };
+
+  const unpause = () => {
+    if (!contract) return;
+    writeContract({
+      address: contract.address,
+      abi: contract.abi,
+      functionName: "unpause",
     });
   };
 
   return {
-    /*
-     * Contract information
-     */
+    address: contract?.address,
+    isDeployed: enabled,
+
     name,
     symbol,
     totalSupply,
     contractOwner,
+    isPaused,
 
-    /*
-     * Selected NFT information
-     */
     tokenOwner,
     tokenURI,
 
-    /*
-     * Loading states
-     */
     isNameLoading,
     isSymbolLoading,
     isTotalSupplyLoading,
     isOwnerLoading,
+    isPausedLoading,
     isTokenOwnerLoading,
     isTokenURILoading,
 
-    /*
-     * NFT read errors
-     */
     isTokenOwnerError,
     isTokenURIError,
 
-    /*
-     * Write operations
-     */
     mint,
     transfer,
+    pause,
+    unpause,
 
-    /*
-     * Transaction states
-     */
     writeData,
     isWritePending,
     isConfirming,
     isConfirmed,
     isTransactionError,
     writeError,
+    resetWrite,
 
-    /*
-     * Refetch collection data
-     */
     refetchName,
     refetchSymbol,
     refetchTotalSupply,
     refetchOwner,
-
-    /*
-     * Refetch NFT data
-     */
+    refetchPaused,
     refetchTokenOwner,
     refetchTokenURI,
   };

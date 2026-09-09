@@ -27,6 +27,13 @@ export const TEMPLATES = [
     description:
       "Reward-accruing staking pool and linear token vesting, sharing one project ERC-20",
   },
+   {
+    id: "demo",
+    title: "demo",
+    standard: "NFT + MST SDK",
+    description:
+      "Basic NFT minting with image metadata, MST SDK wallet operations, and a frontend playground",
+  },
 ];
 
 export function getTemplate(id) {

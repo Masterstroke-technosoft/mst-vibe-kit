@@ -43,6 +43,10 @@ contract DemoNFT is ERC721, Ownable, Pausable, ReentrancyGuard {
         return _tokenURIs[tokenId];
     }
 
+    function totalSupply() external view returns (uint256) {
+    return _nextTokenId - 1;
+}
+
     function _update(
         address to,
         uint256 tokenId,

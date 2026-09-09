@@ -5,17 +5,9 @@ describe("DemoNFT", function () {
   async function deployDemoNFT() {
     const [owner, user] = await ethers.getSigners();
 
-    const name = "Demo NFT";
-    const symbol = "DNFT";
-    const baseURI = "https://example.com/metadata/";
-
     const DemoNFT = await ethers.getContractFactory("DemoNFT");
 
-    const demoNFT = await DemoNFT.deploy(
-      name,
-      symbol,
-      baseURI
-    );
+    const demoNFT = await DemoNFT.deploy();
 
     await demoNFT.waitForDeployment();
 
@@ -23,23 +15,20 @@ describe("DemoNFT", function () {
       demoNFT,
       owner,
       user,
-      name,
-      symbol,
-      baseURI,
     };
   }
 
   describe("Deployment", function () {
     it("should set the correct name", async function () {
-      const { demoNFT, name } = await deployDemoNFT();
+      const { demoNFT } = await deployDemoNFT();
 
-      expect(await demoNFT.name()).to.equal(name);
+      expect(await demoNFT.name()).to.equal("MST Demo NFT");
     });
 
     it("should set the correct symbol", async function () {
-      const { demoNFT, symbol } = await deployDemoNFT();
+      const { demoNFT } = await deployDemoNFT();
 
-      expect(await demoNFT.symbol()).to.equal(symbol);
+      expect(await demoNFT.symbol()).to.equal("MDNFT");
     });
 
     it("should assign the owner correctly", async function () {
@@ -53,21 +42,43 @@ describe("DemoNFT", function () {
     it("should mint an NFT", async function () {
       const { demoNFT, owner } = await deployDemoNFT();
 
-      await demoNFT.mint(owner.address);
+      const tokenURI = "ipfs://QmExampleMetadataCID";
 
-      expect(await demoNFT.ownerOf(0)).to.equal(owner.address);
+      await demoNFT.mint(owner.address, tokenURI);
+
+      expect(await demoNFT.ownerOf(1)).to.equal(owner.address);
     });
 
     it("should increase total supply after minting", async function () {
-      const { demoNFT } = await deployDemoNFT();
+      const { demoNFT, owner } = await deployDemoNFT();
 
       expect(await demoNFT.totalSupply()).to.equal(0);
 
       await demoNFT.mint(
-        (await ethers.getSigners())[0].address
+        owner.address,
+        "ipfs://QmExampleMetadataCID"
       );
 
       expect(await demoNFT.totalSupply()).to.equal(1);
+    });
+
+    it("should mint multiple NFTs with different token IDs", async function () {
+      const { demoNFT, owner, user } = await deployDemoNFT();
+
+      await demoNFT.mint(
+        owner.address,
+        "ipfs://QmExampleMetadataCID1"
+      );
+
+      await demoNFT.mint(
+        user.address,
+        "ipfs://QmExampleMetadataCID2"
+      );
+
+      expect(await demoNFT.ownerOf(1)).to.equal(owner.address);
+      expect(await demoNFT.ownerOf(2)).to.equal(user.address);
+
+      expect(await demoNFT.totalSupply()).to.equal(2);
     });
   });
 
@@ -75,27 +86,82 @@ describe("DemoNFT", function () {
     it("should transfer an NFT between users", async function () {
       const { demoNFT, owner, user } = await deployDemoNFT();
 
-      await demoNFT.mint(owner.address);
+      await demoNFT.mint(
+        owner.address,
+        "ipfs://QmExampleMetadataCID"
+      );
 
       await demoNFT.transferFrom(
         owner.address,
         user.address,
-        0
+        1
       );
 
-      expect(await demoNFT.ownerOf(0)).to.equal(user.address);
+      expect(await demoNFT.ownerOf(1)).to.equal(user.address);
     });
   });
 
   describe("Token URI", function () {
     it("should return the correct token URI", async function () {
-      const { demoNFT, owner, baseURI } = await deployDemoNFT();
+      const { demoNFT, owner } = await deployDemoNFT();
 
-      await demoNFT.mint(owner.address);
+      const tokenURI = "ipfs://QmExampleMetadataCID";
 
-      expect(await demoNFT.tokenURI(0)).to.equal(
-        `${baseURI}0`
+      await demoNFT.mint(
+        owner.address,
+        tokenURI
       );
+
+      expect(await demoNFT.tokenURI(1)).to.equal(tokenURI);
+    });
+
+    it("should store different metadata URIs for different NFTs", async function () {
+      const { demoNFT, owner, user } = await deployDemoNFT();
+
+      const tokenURI1 = "ipfs://QmExampleMetadataCID1";
+      const tokenURI2 = "ipfs://QmExampleMetadataCID2";
+
+      await demoNFT.mint(
+        owner.address,
+        tokenURI1
+      );
+
+      await demoNFT.mint(
+        user.address,
+        tokenURI2
+      );
+
+      expect(await demoNFT.tokenURI(1)).to.equal(tokenURI1);
+      expect(await demoNFT.tokenURI(2)).to.equal(tokenURI2);
+    });
+  });
+
+  describe("Pause", function () {
+    it("should pause minting", async function () {
+      const { demoNFT, owner } = await deployDemoNFT();
+
+      await demoNFT.pause();
+
+      await expect(
+        demoNFT.mint(
+          owner.address,
+          "ipfs://QmExampleMetadataCID"
+        )
+      ).to.be.reverted;
+    });
+
+    it("should allow minting after unpausing", async function () {
+      const { demoNFT, owner } = await deployDemoNFT();
+
+      await demoNFT.pause();
+      await demoNFT.unpause();
+
+      await demoNFT.mint(
+        owner.address,
+        "ipfs://QmExampleMetadataCID"
+      );
+
+      expect(await demoNFT.ownerOf(1)).to.equal(owner.address);
     });
   });
 });

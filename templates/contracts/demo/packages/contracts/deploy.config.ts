@@ -8,17 +8,9 @@ export async function deployAll(hre: HardhatRuntimeEnvironment) {
   console.log("Deploying DemoNFT...");
   console.log("Deployer:", deployer.address);
 
-  const name = "Demo NFT";
-  const symbol = "DNFT";
-  const baseURI = "https://example.com/metadata/";
-
   const DemoNFT = await ethers.getContractFactory("DemoNFT");
 
-  const demoNFT = await DemoNFT.deploy(
-    name,
-    symbol,
-    baseURI
-  );
+  const demoNFT = await DemoNFT.deploy();
 
   await demoNFT.waitForDeployment();
 
@@ -27,6 +19,9 @@ export async function deployAll(hre: HardhatRuntimeEnvironment) {
   console.log("DemoNFT deployed to:", address);
 
   return {
-    demoNFT: address,
+    DemoNFT: {
+      address,
+      constructorArguments: [],
+    },
   };
 }
