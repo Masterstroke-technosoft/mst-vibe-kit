@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import {
   useAccount,
   useReadContract,
@@ -9,6 +10,29 @@ import {
 import type { Address } from "viem";
 import { deployments } from "{{PROJECT_NAME}}-shared";
 import { mstMainnet } from "@/lib/chains";
+
+/**
+ * Logs a failed read with enough context to tell a bad deployment/ABI
+ * apart from a network problem — e.g. "Failed to fetch" / "NetworkError"
+ * almost always means the RPC request itself never got a response (wrong
+ * network, RPC down, or blocked by CORS), not a contract-level revert.
+ */
+function useLogReadError(
+  label: string,
+  error: Error | null,
+  contractAddress: Address | undefined,
+  network: string,
+) {
+  useEffect(() => {
+    if (!error) return;
+    const looksLikeNetworkFailure = /failed to fetch|networkerror|cors/i.test(error.message);
+    console.error(
+      `[useCertificate] ${label} read failed${looksLikeNetworkFailure ? " (looks like a network/CORS issue, not a contract error — check the Network tab for a blocked/failed request)" : ""}:`,
+      error,
+      { contractAddress, network },
+    );
+  }, [label, error, contractAddress, network]);
+}
 
 type DeployedContract = { address: Address; abi: readonly unknown[] };
 
@@ -35,6 +59,8 @@ function useCertificateContract(): DeployedContract | undefined {
  * connected wallet since these are all plain contract reads).
  */
 export function useCertificate(tokenId?: bigint) {
+  const { address: connectedAddress, chainId } = useAccount();
+  const network = chainId === mstMainnet.id ? "mainnet" : "testnet";
   const contract = useCertificateContract();
   const enabled = Boolean(contract);
   const base = contract
@@ -45,6 +71,28 @@ export function useCertificate(tokenId?: bigint) {
     data: name,
     isLoading: isNameLoading,
   } = useReadContract({ ...base, functionName: "name", query: { enabled } });
+
+  const {
+    data: owner,
+    isLoading: isOwnerLoading,
+    isError: isOwnerError,
+    error: ownerError,
+  } = useReadContract({ ...base, functionName: "owner", query: { enabled } });
+  useLogReadError("owner()", ownerError, contract?.address, network);
+
+  const {
+    data: isConnectedWalletIssuer,
+    isLoading: isIssuerLoading,
+    isError: isIssuerError,
+    error: issuerError,
+    refetch: refetchIsIssuer,
+  } = useReadContract({
+    ...base,
+    functionName: "isIssuer",
+    args: connectedAddress ? [connectedAddress] : undefined,
+    query: { enabled: enabled && Boolean(connectedAddress) },
+  });
+  useLogReadError("isIssuer()", issuerError, contract?.address, network);
 
   const {
     data: symbol,
@@ -136,6 +184,16 @@ export function useCertificate(tokenId?: bigint) {
     });
   };
 
+  const setIssuer = (account: Address, allowed: boolean) => {
+    if (!contract) return;
+    writeContract({
+      address: contract.address,
+      abi: contract.abi,
+      functionName: "setIssuer",
+      args: [account, allowed],
+    });
+  };
+
   return {
     address: contract?.address,
     isDeployed: enabled,
@@ -145,6 +203,8 @@ export function useCertificate(tokenId?: bigint) {
     totalSupply,
     tokenURI,
     verifyResult,
+    owner,
+    isConnectedWalletIssuer,
 
     isNameLoading,
     isSymbolLoading,
@@ -153,10 +213,15 @@ export function useCertificate(tokenId?: bigint) {
     isTokenURIError,
     isVerifyLoading,
     isVerifyError,
+    isOwnerLoading,
+    isOwnerError,
+    isIssuerLoading,
+    isIssuerError,
 
     issue,
     batchIssue,
     revoke,
+    setIssuer,
 
     writeData,
     isWritePending,
@@ -166,5 +231,6 @@ export function useCertificate(tokenId?: bigint) {
 
     refetchTotalSupply,
     refetchVerify,
+    refetchIsIssuer,
   };
 }

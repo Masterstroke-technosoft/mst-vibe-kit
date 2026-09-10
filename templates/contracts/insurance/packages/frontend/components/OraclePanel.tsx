@@ -8,8 +8,17 @@ import { useInsurance } from "@/hooks/useInsurance";
 export default function OraclePanel() {
   const { address, isConnected } = useAccount();
 
-  const { oracle, isDeployed, submitOracleData, isWritePending, isConfirming, isConfirmed, writeError } =
-    useInsurance();
+  const {
+    oracle,
+    isOracleLoading,
+    isOracleError,
+    isDeployed,
+    submitOracleData,
+    isWritePending,
+    isConfirming,
+    isConfirmed,
+    writeError,
+  } = useInsurance();
 
   const [policyId, setPolicyId] = useState("1");
   const [observedValue, setObservedValue] = useState("");
@@ -75,10 +84,18 @@ export default function OraclePanel() {
           </div>
 
           {!isConnected && <p className="hint">Connect your wallet first.</p>}
-          {isConnected && !isOracle && (
+          {isConnected && isOracleError && (
+            <p className="network-warning">
+              Couldn&apos;t read the oracle address from the deployed contract — check the browser
+              console for the underlying error. Common causes: a stale deployment (run{" "}
+              <code>npm run deploy:testnet</code> and reload), or the RPC request was blocked by
+              CORS / failed outright (a &quot;Failed to fetch&quot; error in the console).
+            </p>
+          )}
+          {isConnected && !isOracleError && !isOracleLoading && !isOracle && (
             <p className="hint">
-              Connected wallet is not the oracle address. Only <code className="mono">{oracle?.toString()}</code>{" "}
-              can submit data.
+              Connected wallet is not the oracle address. Only{" "}
+              <code className="mono">{oracle?.toString()}</code> can submit data.
             </p>
           )}
           {isConfirmed && <p className="status-success">Oracle data submitted.</p>}

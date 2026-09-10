@@ -4,7 +4,10 @@ import WalletPanel from "@/components/WalletPanel";
 import CertificateStats from "@/components/CertificateStats";
 import IssuePanel from "@/components/IssuePanel";
 import BatchIssuePanel from "@/components/BatchIssuePanel";
+import AutoIssuePanel from "@/components/AutoIssuePanel";
+import AutoBatchIssuePanel from "@/components/AutoBatchIssuePanel";
 import LookupPanel from "@/components/LookupPanel";
+import IssuerAdminPanel from "@/components/IssuerAdminPanel";
 
 export default function Page() {
   return (
@@ -21,7 +24,10 @@ export default function Page() {
       <CertificateStats />
       <IssuePanel />
       <BatchIssuePanel />
+      <AutoIssuePanel />
+      <AutoBatchIssuePanel />
       <LookupPanel />
+      <IssuerAdminPanel />
     </main>
   );
 }

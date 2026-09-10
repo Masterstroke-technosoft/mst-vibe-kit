@@ -10,9 +10,12 @@ export const wagmiConfig = createConfig({
     injected(),
     ...(walletConnectProjectId ? [walletConnect({ projectId: walletConnectProjectId })] : []),
   ],
+  // Same-origin proxy, not the RPC URLs directly — MST Testnet's RPC
+  // doesn't send CORS headers, so a direct browser fetch to it is blocked.
+  // See app/api/rpc/[network]/route.ts.
   transports: {
-    [mstTestnet.id]: http(),
-    [mstMainnet.id]: http(),
+    [mstTestnet.id]: http("/api/rpc/testnet"),
+    [mstMainnet.id]: http("/api/rpc/mainnet"),
   },
 });
 

@@ -29,6 +29,7 @@ export default function PurchasePolicyPanel() {
     isDeployed,
     premiumPreview,
     isPremiumPreviewLoading,
+    isPremiumPreviewError,
     purchasePolicy,
     isWritePending,
     isConfirming,
@@ -160,11 +161,21 @@ export default function PurchasePolicyPanel() {
             <p className="stat-value">
               {coverageAmount === undefined
                 ? "-"
-                : isPremiumPreviewLoading || premiumPreview === undefined
-                  ? "Calculating…"
-                  : `${formatEther(premiumPreview as bigint)} MST`}
+                : isPremiumPreviewError
+                  ? "Couldn't calculate — see console"
+                  : isPremiumPreviewLoading || premiumPreview === undefined
+                    ? "Calculating…"
+                    : `${formatEther(premiumPreview as bigint)} MST`}
             </p>
           </div>
+          {isPremiumPreviewError && (
+            <p className="network-warning">
+              The premium read failed — check the browser console for the underlying error.
+              Common causes: a stale deployment (run <code>npm run deploy:testnet</code> and
+              reload), or the RPC request was blocked by CORS / failed outright (a &quot;Failed to
+              fetch&quot; error in the console).
+            </p>
+          )}
 
           <div className="wallet">
             <button type="button" onClick={handlePurchase} disabled={!canSubmit || busy}>

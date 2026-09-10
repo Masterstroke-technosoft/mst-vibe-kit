@@ -28,6 +28,49 @@ describe("Certificate", function () {
 
       expect(await certificate.owner()).to.equal(owner.address);
     });
+
+    it("should make the deployer an issuer by default", async function () {
+      const { certificate, owner } = await deployCertificate();
+
+      expect(await certificate.isIssuer(owner.address)).to.equal(true);
+    });
+  });
+
+  describe("Issuer management", function () {
+    it("should let the owner grant issuer rights to another address", async function () {
+      const { certificate, other } = await deployCertificate();
+
+      expect(await certificate.isIssuer(other.address)).to.equal(false);
+
+      await certificate.setIssuer(other.address, true);
+
+      expect(await certificate.isIssuer(other.address)).to.equal(true);
+    });
+
+    it("should let a newly-granted issuer issue certificates", async function () {
+      const { certificate, holder, other, certHash } = await deployCertificate();
+
+      await certificate.setIssuer(other.address, true);
+      await certificate.connect(other).issue(holder.address, certHash, "ipfs://QmExampleCertificate");
+
+      expect(await certificate.ownerOf(1)).to.equal(holder.address);
+    });
+
+    it("should let the owner revoke issuer rights", async function () {
+      const { certificate, owner, holder, certHash } = await deployCertificate();
+
+      await certificate.setIssuer(owner.address, false);
+
+      await expect(
+        certificate.issue(holder.address, certHash, "ipfs://QmExampleCertificate")
+      ).to.be.revertedWith("Certificate: caller is not an issuer");
+    });
+
+    it("should reject setIssuer from a non-owner account", async function () {
+      const { certificate, other } = await deployCertificate();
+
+      await expect(certificate.connect(other).setIssuer(other.address, true)).to.be.reverted;
+    });
   });
 
   describe("Issuing", function () {
@@ -40,12 +83,12 @@ describe("Certificate", function () {
       expect(await certificate.totalSupply()).to.equal(1);
     });
 
-    it("should reject issuing from a non-owner account", async function () {
+    it("should reject issuing from a non-issuer account", async function () {
       const { certificate, holder, other, certHash } = await deployCertificate();
 
       await expect(
         certificate.connect(other).issue(holder.address, certHash, "ipfs://QmExampleCertificate")
-      ).to.be.reverted;
+      ).to.be.revertedWith("Certificate: caller is not an issuer");
     });
 
     it("should batch-issue certificates to multiple holders", async function () {

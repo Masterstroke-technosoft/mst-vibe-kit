@@ -9,7 +9,7 @@ install/deploy/test flow — this file covers what's specific to the demo.
 ## 1. Install dependencies
 
 ```
-pnpm install
+pnpm/npm install
 ```
 
 ## 2. Configure environment variables

@@ -10,15 +10,15 @@ template.
 ## 1. Install dependencies
 
 ```
-pnpm install
+pnpm/npm install
 ```
 
 ## 2. Configure environment variables
 
 Copy `.env.example` to `.env.local` at the project root and set `PRIVATE_KEY`
 to a funded testnet account — this is the account that deploys the contract
-and becomes its owner (the only address allowed to issue or revoke
-certificates). **Never commit `.env.local`.**
+and becomes its owner **and** its first issuer (see below). **Never commit
+`.env.local`.**
 
 ## 3. Start the local stack
 
@@ -38,10 +38,29 @@ npm run deploy:testnet
 The contract address and ABI are written to `packages/shared/src/contracts.ts`
 automatically — refresh the frontend and it picks up the deployment.
 
-## 5. Try it out
+## 5. Owner vs. issuer — who can do what
+
+The contract splits two roles:
+
+- **Owner** — set once at deploy time (transferable via standard
+  `Ownable`). Only the owner can revoke certificates, pause the contract,
+  and grant or remove issuer rights.
+- **Issuer** — any wallet with `isIssuer[address] == true`. Issuers can
+  call `issue` and `batchIssue`. The deployer is made an issuer
+  automatically, but the owner can add more (a co-founder's wallet, a
+  registrar's wallet, or a backend signer) with `setIssuer(address, true)`
+  — no redeploying, and no single hard-coded issuing address baked into the
+  frontend. This is what lets the Vibe Kit frontend work with whatever
+  wallet a user connects, instead of failing simulation for anyone but the
+  deployer.
+
+Manage this from the **Issuer Wallets** panel (owner-only) — paste an
+address and grant or revoke its issuer role.
+
+## 6. Try it out
 
 1. Open http://localhost:3000 and connect the wallet you deployed with (it's
-   the contract owner — only it can issue or revoke).
+   both the owner and, by default, an issuer).
 2. Under **Issue Certificate**, fill in a recipient address, holder name,
    and credential, then click **Issue certificate**. The app hashes the
    credential fields with keccak256 and stores that fingerprint on-chain —
@@ -57,6 +76,30 @@ automatically — refresh the frontend and it picks up the deployment.
    **Revoke** from the same lookup panel — the token stays on-chain as a
    record, but verification now reports it as invalid.
 
+## 7. Automated issuance (no browser wallet)
+
+For issuing outside a human clicking a button — a webhook when someone
+finishes a course, a cron job, another backend calling in — use the
+`backend` package instead of the wallet-based forms:
+
+1. Generate a **dedicated** wallet for this (don't reuse your deploy
+   `PRIVATE_KEY`) and set its private key as `ISSUER_PRIVATE_KEY` in
+   `.env.local`.
+2. As the contract owner, grant that wallet issuer rights: connect the
+   owner wallet in the **Issuer Wallets** panel, paste the new wallet's
+   address, and click **Grant issuer role**.
+3. The backend starts automatically with `npm run dev` (or run it alone
+   with `npm run dev --workspace=backend`) on http://localhost:4100.
+   `GET /api/health` reports whether `ISSUER_PRIVATE_KEY` is set and
+   whether that wallet is actually an authorized issuer on-chain.
+4. Use the **Automated Issuance** / **Automated Batch Issuance** cards in
+   the frontend (they call the backend directly), or hit
+   `POST /api/issue` / `POST /api/batch-issue` yourself — see
+   `packages/backend/src/server.ts` for the request shape.
+
+The backend computes the same keccak256 fingerprint and token URI as the
+browser forms, so certificates issued either way are identical in shape.
+
 ## How verification actually works
 
 `Certificate.verify(tokenId)` is a single, free on-chain read that returns
@@ -69,8 +112,28 @@ instantly" flow — no backend, no database, no phone calls.
 - **"No Certificate deployment found for this network"** — you haven't run
   `npm run deploy:testnet` yet, or your wallet is on a different network
   than the one you deployed to.
-- **Issue/Batch Issue/Revoke buttons do nothing** — only the deployer wallet
-  (the contract owner) can call these; connect that wallet.
+- **The Issue/Issuer Wallets panels show a red "Couldn't read owner()/issuer
+  status..." message, or the Issue button is stuck disabled for every
+  wallet, including the deployer** — this means the ABI/address in
+  `packages/shared/src/contracts.ts` doesn't match the contract actually at
+  that address (most often: you edited `Certificate.sol` — or pulled a
+  newer version of it — after the last deploy, so the frontend is calling
+  `owner()`/`isIssuer()` against bytecode that predates those functions).
+  Fix: `npm run deploy:testnet` again to deploy the current contract and
+  refresh `contracts.ts`, then reload the page.
+- **Issue/Batch Issue reverts, or the panel shows "not an authorized
+  issuer"** (without the red ABI-mismatch message above) — connect a wallet
+  with issuer rights (the deployer has them by default), or have the owner
+  grant them from the Issuer Wallets panel.
+- **Revoke, pause, or Issuer Wallets actions do nothing** — these are
+  owner-only; connect the deployer wallet (or whoever ownership was
+  transferred to).
 - **Transfer reverts** — this is expected. Certificates are soulbound: once
   issued, they can never be transferred between holders, only issued (mint)
   or revoked.
+- **Automated Issuance panel errors with "ISSUER_PRIVATE_KEY is not set"**
+  — set it in `.env.local` and restart `npm run dev`.
+- **Automated Issuance panel errors with a revert / "caller is not an
+  issuer"** — the wallet derived from `ISSUER_PRIVATE_KEY` hasn't been
+  granted issuer rights yet; check `GET http://localhost:4100/api/health`
+  for `isIssuerConfigured`, then grant it from the Issuer Wallets panel.

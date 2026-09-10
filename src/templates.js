@@ -9,7 +9,7 @@ export const TEMPLATES = [
   },
   {
     id: "token",
-    title: "token",
+    title: "tokenization",
     standard: "MEP-20",
     description: "Fungible token with mint/burn roles, full test suite",
   },
@@ -36,17 +36,24 @@ export const TEMPLATES = [
   },
   {
     id: "certificate",
-    title: "certificate",
+    title: "on chain certificate",
     standard: "Soulbound ERC-721",
     description:
       "Tamper-proof on-chain certificates with single and batch issuance, revocation, and instant QR-code verification",
   },
   {
     id: "insurance",
-    title: "insurance",
+    title: "insurance automation",
     standard: "Parametric Insurance",
     description:
       "Self-executing insurance policies that pay out automatically once an oracle reports a trigger condition met, no manual claims",
+  },
+  {
+    id: "supplychain",
+    title: "supply chain transparency",
+    standard: "Custody Registry",
+    description:
+      "Immutable product registration, custody handoffs, and inspection checkpoints, with instant traceability by product ID or QR code",
   },
 ];
 

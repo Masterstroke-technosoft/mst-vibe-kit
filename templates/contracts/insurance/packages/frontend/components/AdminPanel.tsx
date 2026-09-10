@@ -12,6 +12,8 @@ export default function AdminPanel() {
 
   const {
     owner,
+    isOwnerLoading,
+    isOwnerError,
     isDeployed,
     fundPool,
     withdrawPool,
@@ -45,6 +47,15 @@ export default function AdminPanel() {
           No ParametricInsurance deployment found for this network. Run{" "}
           <code>npm run deploy:testnet</code> first.
         </p>
+      ) : isOwnerError ? (
+        <p className="network-warning">
+          Couldn&apos;t read <code>owner()</code> from the deployed contract — check the browser
+          console for the underlying error. Common causes: a stale deployment (run{" "}
+          <code>npm run deploy:testnet</code> and reload), or the RPC request was blocked by CORS
+          / failed outright (a &quot;Failed to fetch&quot; error in the console).
+        </p>
+      ) : isOwnerLoading ? (
+        <p className="hint">Loading…</p>
       ) : !isOwner ? (
         <p className="hint">
           Connect the contract owner{owner ? " " : ""}

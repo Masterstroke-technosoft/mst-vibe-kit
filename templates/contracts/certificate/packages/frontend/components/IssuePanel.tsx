@@ -24,7 +24,9 @@ export default function IssuePanel() {
   const {
     issue,
     isDeployed,
-    totalSupply,
+    isConnectedWalletIssuer,
+    isIssuerLoading,
+    isIssuerError,
     isWritePending,
     isConfirming,
     isConfirmed,
@@ -38,7 +40,12 @@ export default function IssuePanel() {
   const [issuedOn, setIssuedOn] = useState(() => new Date().toISOString().slice(0, 10));
   const [issuedTokenId, setIssuedTokenId] = useState<bigint | null>(null);
 
-  const canSubmit = isConnected && recipient.trim() && holderName.trim() && credential.trim();
+  const canSubmit =
+    isConnected &&
+    isConnectedWalletIssuer === true &&
+    recipient.trim() &&
+    holderName.trim() &&
+    credential.trim();
 
   const handleIssue = async () => {
     if (!canSubmit) return;
@@ -139,6 +146,20 @@ export default function IssuePanel() {
           </div>
 
           {!isConnected && <p className="hint">Connect your wallet first.</p>}
+          {isConnected && isIssuerError && (
+            <p className="network-warning">
+              Couldn&apos;t read issuer status from the deployed contract — check the browser
+              console for the underlying error. Common causes: a stale deployment (run{" "}
+              <code>npm run deploy:testnet</code> and reload), or the RPC request was blocked by
+              CORS / failed outright (a &quot;Failed to fetch&quot; error in the console).
+            </p>
+          )}
+          {isConnected && !isIssuerLoading && !isIssuerError && isConnectedWalletIssuer === false && (
+            <p className="network-warning">
+              Connected wallet isn&apos;t an authorized issuer. Ask the contract owner to grant it
+              issuer rights in the Issuer Wallets panel below.
+            </p>
+          )}
           {isConfirmed && (
             <p className="status-success">
               Certificate issued

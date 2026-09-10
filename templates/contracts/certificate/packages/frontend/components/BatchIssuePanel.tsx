@@ -42,14 +42,23 @@ function parseRows(input: string): { rows: Row[]; errors: string[] } {
 
 export default function BatchIssuePanel() {
   const { isConnected } = useAccount();
-  const { batchIssue, isDeployed, isWritePending, isConfirming, isConfirmed, writeError } =
-    useCertificate();
+  const {
+    batchIssue,
+    isDeployed,
+    isConnectedWalletIssuer,
+    isIssuerLoading,
+    isIssuerError,
+    isWritePending,
+    isConfirming,
+    isConfirmed,
+    writeError,
+  } = useCertificate();
 
   const [input, setInput] = useState("");
   const { rows, errors } = parseRows(input);
 
   const handleBatchIssue = () => {
-    if (!isConnected || rows.length === 0 || errors.length > 0) return;
+    if (!isConnected || !isConnectedWalletIssuer || rows.length === 0 || errors.length > 0) return;
 
     const to = rows.map((row) => row.address);
     const certHashes = rows.map((row) => hashCertificate(row));
@@ -101,7 +110,9 @@ export default function BatchIssuePanel() {
             <button
               type="button"
               onClick={handleBatchIssue}
-              disabled={!isConnected || rows.length === 0 || errors.length > 0 || busy}
+              disabled={
+                !isConnected || !isConnectedWalletIssuer || rows.length === 0 || errors.length > 0 || busy
+              }
             >
               {isWritePending
                 ? "Confirm in wallet…"
@@ -112,6 +123,20 @@ export default function BatchIssuePanel() {
           </div>
 
           {!isConnected && <p className="hint">Connect your wallet first.</p>}
+          {isConnected && isIssuerError && (
+            <p className="network-warning">
+              Couldn&apos;t read issuer status from the deployed contract — check the browser
+              console for the underlying error. Common causes: a stale deployment (run{" "}
+              <code>npm run deploy:testnet</code> and reload), or the RPC request was blocked by
+              CORS / failed outright (a &quot;Failed to fetch&quot; error in the console).
+            </p>
+          )}
+          {isConnected && !isIssuerLoading && !isIssuerError && isConnectedWalletIssuer === false && (
+            <p className="network-warning">
+              Connected wallet isn&apos;t an authorized issuer. Ask the contract owner to grant it
+              issuer rights in the Issuer Wallets panel below.
+            </p>
+          )}
           {errors.length > 0 && (
             <p className="status-error">{errors[0]}{errors.length > 1 ? ` (+${errors.length - 1} more)` : ""}</p>
           )}

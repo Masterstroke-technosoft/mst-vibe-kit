@@ -5,7 +5,7 @@
 Already done if you used `create-mst-app`. Otherwise, from the project root:
 
 ```
-pnpm install
+pnpm/npm install
 ```
 
 ## 2. Add your private key

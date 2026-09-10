@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import {
   useAccount,
   useReadContract,
@@ -9,6 +10,29 @@ import {
 import type { Address } from "viem";
 import { deployments } from "{{PROJECT_NAME}}-shared";
 import { mstMainnet } from "@/lib/chains";
+
+/**
+ * Logs a failed read with enough context to tell a bad deployment/ABI
+ * apart from a network problem — e.g. "Failed to fetch" / "NetworkError"
+ * almost always means the RPC request itself never got a response (wrong
+ * network, RPC down, or blocked by CORS), not a contract-level revert.
+ */
+function useLogReadError(
+  label: string,
+  error: Error | null,
+  contractAddress: Address | undefined,
+  network: string,
+) {
+  useEffect(() => {
+    if (!error) return;
+    const looksLikeNetworkFailure = /failed to fetch|networkerror|cors/i.test(error.message);
+    console.error(
+      `[useInsurance] ${label} read failed${looksLikeNetworkFailure ? " (looks like a network/CORS issue, not a contract error — check the Network tab for a blocked/failed request)" : ""}:`,
+      error,
+      { contractAddress, network },
+    );
+  }, [label, error, contractAddress, network]);
+}
 
 // `abi` is typed loosely (not as a const-asserted literal) since it comes
 // from the JSON written by the deploy script — wagmi's payable/non-payable
@@ -39,6 +63,8 @@ function useInsuranceContract(): DeployedContract | undefined {
 }
 
 export function useInsurance(policyId?: bigint, previewCoverageAmount?: bigint) {
+  const { chainId } = useAccount();
+  const network = chainId === mstMainnet.id ? "mainnet" : "testnet";
   const contract = useInsuranceContract();
   const enabled = Boolean(contract);
   const base = contract
@@ -48,13 +74,19 @@ export function useInsurance(policyId?: bigint, previewCoverageAmount?: bigint) 
   const {
     data: oracle,
     isLoading: isOracleLoading,
+    isError: isOracleError,
+    error: oracleError,
     refetch: refetchOracle,
   } = useReadContract({ ...base, functionName: "oracle", query: { enabled } });
+  useLogReadError("oracle()", oracleError, contract?.address, network);
 
   const {
     data: owner,
     isLoading: isOwnerLoading,
+    isError: isOwnerError,
+    error: ownerError,
   } = useReadContract({ ...base, functionName: "owner", query: { enabled } });
+  useLogReadError("owner()", ownerError, contract?.address, network);
 
   const {
     data: premiumRateBps,
@@ -65,8 +97,11 @@ export function useInsurance(policyId?: bigint, previewCoverageAmount?: bigint) 
   const {
     data: poolBalance,
     isLoading: isPoolBalanceLoading,
+    isError: isPoolBalanceError,
+    error: poolBalanceError,
     refetch: refetchPoolBalance,
   } = useReadContract({ ...base, functionName: "poolBalance", query: { enabled } });
+  useLogReadError("poolBalance()", poolBalanceError, contract?.address, network);
 
   const {
     data: totalPolicies,
@@ -90,12 +125,15 @@ export function useInsurance(policyId?: bigint, previewCoverageAmount?: bigint) 
   const {
     data: premiumPreview,
     isLoading: isPremiumPreviewLoading,
+    isError: isPremiumPreviewError,
+    error: premiumPreviewError,
   } = useReadContract({
     ...base,
     functionName: "calculatePremium",
     args: previewCoverageAmount !== undefined ? [previewCoverageAmount] : undefined,
     query: { enabled: enabled && previewCoverageAmount !== undefined },
   });
+  useLogReadError("calculatePremium()", premiumPreviewError, contract?.address, network);
 
   const {
     data: writeData,
@@ -199,12 +237,16 @@ export function useInsurance(policyId?: bigint, previewCoverageAmount?: bigint) 
     premiumPreview,
 
     isOracleLoading,
+    isOracleError,
     isOwnerLoading,
+    isOwnerError,
     isPremiumRateLoading,
     isPoolBalanceLoading,
+    isPoolBalanceError,
     isTotalPoliciesLoading,
     isPolicyLoading,
     isPremiumPreviewLoading,
+    isPremiumPreviewError,
 
     purchasePolicy,
     submitOracleData,

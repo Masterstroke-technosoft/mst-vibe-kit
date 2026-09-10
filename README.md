@@ -46,7 +46,7 @@ npx create-mst-app my-app --template defi --pm pnpm --git --yes
 
 | Flag | Values |
 |---|---|
-| `--template <name>` | `blank`, `token`, `rwa`, `defi`, `demo`, `certificate`, `insurance` |
+| `--template <name>` | `blank`, `token`, `rwa`, `defi`, `demo`, `certificate`, `insurance`, `supplychain` |
 | `--pm <manager>` | `pnpm` (default), `npm`, `yarn` |
 | `--git` / `--no-git` | initialize a git repo |
 | `--skip-install` | skip dependency installation |
@@ -63,6 +63,7 @@ npx create-mst-app my-app --template defi --pm pnpm --git --yes
 | `demo` | NFT + MST SDK | `DemoNFT` (ERC-721) with image minting via a Pinata IPFS backend, a wallet/mint/transfer/gallery frontend, and an MST SDK burner-wallet playground |
 | `certificate` | Soulbound ERC-721 | `Certificate` — non-transferable credential NFTs with single and batch issuance, revocation, and a public `/verify/[tokenId]` page with QR-code sharing |
 | `insurance` | Parametric Insurance | `ParametricInsurance` — buy coverage with an on-chain premium quote, an oracle-restricted `submitOracleData` call that pays out automatically when a trigger condition is met, and pool funding/withdrawal controls |
+| `supplychain` | Custody Registry | `SupplyChain` — product registration, participant-gated custody transfers, inspection/certification/delivery checkpoints, owner-only recall, and a public `/track/[productId]` page with QR-code sharing |
 
 All templates use OpenZeppelin base contracts (`AccessControl`, `Pausable`,
 `ReentrancyGuard`) and are non-upgradeable by default. `marketplace` is on
@@ -122,8 +123,9 @@ npm test
   config, basic frontend starter.
 - **Phase 2 (this repo today):** `rwa` (real-world-asset tokenization),
   `defi` (staking + vesting), `demo` (NFT + MST SDK), `certificate`
-  (on-chain credential verification), and `insurance` (parametric
-  automation) use-case templates. `marketplace` still to come, plus a
-  plugin system for community templates.
+  (on-chain credential verification), `insurance` (parametric automation),
+  and `supplychain` (custody/provenance tracking) use-case templates.
+  `marketplace` still to come, plus a plugin system for community
+  templates.
 - **Phase 3:** Official `hardhat-mst` plugin with MST-specific helpers.
 - **Phase 4:** A web-based scaffolder alongside the CLI.

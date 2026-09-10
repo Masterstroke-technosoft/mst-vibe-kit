@@ -23,10 +23,34 @@ contract Certificate is ERC721, Ownable, Pausable, ReentrancyGuard {
     mapping(uint256 => CertificateData) private _certificates;
     mapping(uint256 => string) private _tokenURIs;
 
+    /// @notice Wallets allowed to issue certificates. Distinct from `owner`
+    /// (administration — revoking, pausing, managing issuers) so a Vibe Kit
+    /// frontend can work with whatever wallet the connected user brings,
+    /// rather than requiring the exact deployer key.
+    mapping(address => bool) public isIssuer;
+
     event CertificateIssued(uint256 indexed tokenId, address indexed holder, bytes32 certHash);
     event CertificateRevoked(uint256 indexed tokenId);
+    event IssuerUpdated(address indexed account, bool allowed);
 
-    constructor() ERC721("MST Certificate", "MSTCERT") Ownable(msg.sender) {}
+    modifier onlyIssuer() {
+        require(isIssuer[msg.sender], "Certificate: caller is not an issuer");
+        _;
+    }
+
+    constructor() ERC721("MST Certificate", "MSTCERT") Ownable(msg.sender) {
+        isIssuer[msg.sender] = true;
+        emit IssuerUpdated(msg.sender, true);
+    }
+
+    /// @notice Owner-only. Grants or revokes issuing rights for an address —
+    /// the way to add more issuer wallets (or a backend signer) without
+    /// transferring contract ownership.
+    function setIssuer(address account, bool allowed) external onlyOwner {
+        require(account != address(0), "Certificate: zero address");
+        isIssuer[account] = allowed;
+        emit IssuerUpdated(account, allowed);
+    }
 
     /// @notice Issues one certificate. `certHash` should be a keccak256 hash
     /// of the certificate's off-chain data (holder name, course, date, ...),
@@ -35,7 +59,7 @@ contract Certificate is ERC721, Ownable, Pausable, ReentrancyGuard {
         address to,
         bytes32 certHash,
         string calldata tokenURI_
-    ) external onlyOwner whenNotPaused nonReentrant returns (uint256) {
+    ) external onlyIssuer whenNotPaused nonReentrant returns (uint256) {
         return _issue(to, certHash, tokenURI_);
     }
 
@@ -45,7 +69,7 @@ contract Certificate is ERC721, Ownable, Pausable, ReentrancyGuard {
         address[] calldata to,
         bytes32[] calldata certHashes,
         string[] calldata tokenURIs
-    ) external onlyOwner whenNotPaused nonReentrant returns (uint256[] memory tokenIds) {
+    ) external onlyIssuer whenNotPaused nonReentrant returns (uint256[] memory tokenIds) {
         require(
             to.length == certHashes.length && to.length == tokenURIs.length,
             "Certificate: array length mismatch"

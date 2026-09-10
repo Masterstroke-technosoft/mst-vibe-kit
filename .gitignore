@@ -1,6 +1,10 @@
 node_modules/
 .DS_Store
 *.log
+certificate-test
+insurance-test
+supply-chain-test
+demo-test
 
 # scratch output from running the CLI locally / self-tests
 /tmp-*

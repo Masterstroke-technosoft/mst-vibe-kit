@@ -10,7 +10,7 @@ flow — this file covers what's specific to this template.
 ## 1. Install dependencies
 
 ```
-pnpm install
+pnpm/npm install
 ```
 
 ## 2. Configure environment variables
@@ -73,6 +73,20 @@ same on-chain event.
 - **"No ParametricInsurance deployment found for this network"** — you
   haven't run `npm run deploy:testnet` yet, or your wallet is on a
   different network than the one you deployed to.
+- **Pool stats, Premium due, or an owner/oracle check show a red
+  "Couldn't read..." message, or "Premium due" is stuck on "Calculating…"
+  indefinitely** — this is a *read* failing, not the contract. Check the
+  browser console: `useInsurance` logs the underlying error for every
+  failed read. Common causes: (1) `packages/shared/src/contracts.ts`
+  points at a stale deployment — run `npm run deploy:testnet` again and
+  reload; (2) the RPC request was blocked by CORS or failed outright (a
+  "Failed to fetch" error in the console) — reads go through the
+  same-origin `/api/rpc/[network]` proxy in `packages/frontend/app/api/rpc`
+  specifically to avoid this (MST Testnet's public RPC doesn't send CORS
+  headers), so this usually means that route isn't being hit — confirm
+  `packages/frontend/lib/wagmi.ts` still points its transports at
+  `/api/rpc/testnet` / `/api/rpc/mainnet` rather than the RPC URLs
+  directly.
 - **Oracle submission reverts with "pool underfunded"** — fund the pool
   from the Pool Admin panel before triggering a payout larger than its
   current balance.
