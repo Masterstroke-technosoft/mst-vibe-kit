@@ -1,17 +1,21 @@
-# DemoNFT — Startup Guide
+# QUICKSTART
 
 This project was scaffolded with the **demo** template: an ERC-721 (`DemoNFT`)
 contract, a Next.js frontend (wallet connect, mint, gallery, transfer), a
 small Express backend that pins images/metadata to IPFS via Pinata, and an
-MST SDK wallet playground. See `QUICKSTART.md` for the general
-install/deploy/test flow — this file covers what's specific to the demo.
+MST SDK wallet playground.
 
 ## 1. Install dependencies
 
 ```
 pnpm/npm install
 ```
+If you picked `pnpm` or `yarn` and don't have it yet, install it globally
+first, then re-run the install:
 
+```
+npm install -g pnpm   # or: npm install -g yarn
+pnpm install           # or: yarn install
 ## 2. Configure environment variables
 
 Copy `.env.example` to `.env.local` at the project root and fill in:
@@ -37,7 +41,13 @@ This starts, in parallel:
 - the demo backend on http://localhost:4000 (`packages/backend`)
 - the Next.js frontend on http://localhost:3000 (`packages/frontend`)
 
-## 4. Deploy DemoNFT
+## 4. Run the tests
+
+```
+npm run test
+```
+
+## 5. Deploy DemoNFT
 
 ```
 npm run deploy:testnet
@@ -46,7 +56,7 @@ npm run deploy:testnet
 The contract address and ABI are written to `packages/shared/src/contracts.ts`
 automatically — refresh the frontend and it picks up the deployment.
 
-## 5. Try the demo
+## 6. Try the demo
 
 1. Open http://localhost:3000 and connect a wallet (make sure it's on MST
    Testnet).
@@ -60,6 +70,21 @@ automatically — refresh the frontend and it picks up the deployment.
 5. Under **SDK Wallet Playground**, generate a burner wallet with the MST SDK
    directly (no browser extension needed) and try a balance check, gas
    estimate, or native transfer — funded from the testnet faucet only.
+
+## 7. Verify on MSTScan (optional)
+
+```
+npm run verify:testnet
+```
+
+## 8. Ship to mainnet
+
+```
+npm run deploy:mainnet
+```
+
+You'll be asked to type a confirmation phrase before anything is sent to
+mainnet.
 
 ## Troubleshooting
 

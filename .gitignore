@@ -5,6 +5,8 @@ certificate-test
 insurance-test
 supply-chain-test
 demo-test
+testing-yarn-insura
+demo-testtttt
 
 # scratch output from running the CLI locally / self-tests
 /tmp-*

@@ -2,11 +2,23 @@
 
 ## 1. Install dependencies
 
-Already done if you used `create-mst-app`. Otherwise, from the project root:
+Already done if you used `create-mst-app` (unless it printed a warning that
+your chosen package manager wasn't installed — see below). Otherwise, from
+the project root:
 
 ```
-pnpm/npm install
+pnpm install
 ```
+
+If you picked `pnpm` or `yarn` and don't have it yet, install it globally
+first, then re-run the install:
+
+```
+npm install -g pnpm   # or: npm install -g yarn
+pnpm install           # or: yarn install
+```
+
+`npm` itself ships with Node.js, so no extra install is needed for it.
 
 ## 2. Add your private key
 

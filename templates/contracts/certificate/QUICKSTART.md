@@ -1,17 +1,21 @@
-# On-Chain Certificate — Startup Guide
+# QUICKSTART
 
 This project was scaffolded with the **certificate** template: a soulbound
 (non-transferable) ERC-721 `Certificate` registry, plus a Next.js frontend
 for issuing single or batch credentials, looking one up, and sharing a
-QR-code verification link. See `QUICKSTART.md` for the general
-install/deploy/test flow — this file covers what's specific to this
-template.
+QR-code verification link.
 
 ## 1. Install dependencies
 
 ```
 pnpm/npm install
 ```
+If you picked `pnpm` or `yarn` and don't have it yet, install it globally
+first, then re-run the install:
+
+```
+npm install -g pnpm   # or: npm install -g yarn
+pnpm install           # or: yarn install
 
 ## 2. Configure environment variables
 
@@ -29,7 +33,13 @@ npm run dev
 This starts a local Hardhat node and the Next.js frontend on
 http://localhost:3000.
 
-## 4. Deploy the Certificate contract
+## 4. Run the tests
+
+```
+npm run test
+```
+
+## 5. Deploy the Certificate contract
 
 ```
 npm run deploy:testnet
@@ -38,7 +48,7 @@ npm run deploy:testnet
 The contract address and ABI are written to `packages/shared/src/contracts.ts`
 automatically — refresh the frontend and it picks up the deployment.
 
-## 5. Owner vs. issuer — who can do what
+## 6. Owner vs. issuer — who can do what
 
 The contract splits two roles:
 
@@ -57,7 +67,7 @@ The contract splits two roles:
 Manage this from the **Issuer Wallets** panel (owner-only) — paste an
 address and grant or revoke its issuer role.
 
-## 6. Try it out
+## 7. Try it out
 
 1. Open http://localhost:3000 and connect the wallet you deployed with (it's
    both the owner and, by default, an issuer).
@@ -76,7 +86,7 @@ address and grant or revoke its issuer role.
    **Revoke** from the same lookup panel — the token stays on-chain as a
    record, but verification now reports it as invalid.
 
-## 7. Automated issuance (no browser wallet)
+## 8. Automated issuance (no browser wallet)
 
 For issuing outside a human clicking a button — a webhook when someone
 finishes a course, a cron job, another backend calling in — use the
@@ -99,6 +109,21 @@ finishes a course, a cron job, another backend calling in — use the
 
 The backend computes the same keccak256 fingerprint and token URI as the
 browser forms, so certificates issued either way are identical in shape.
+
+## 9. Verify on MSTScan (optional)
+
+```
+npm run verify:testnet
+```
+
+## 10. Ship to mainnet
+
+```
+npm run deploy:mainnet
+```
+
+You'll be asked to type a confirmation phrase before anything is sent to
+mainnet.
 
 ## How verification actually works
 

@@ -1,17 +1,23 @@
-# Insurance Automation — Startup Guide
+# QUICKSTART
 
 This project was scaffolded with the **insurance** template: a
 `ParametricInsurance` contract that pays coverage out automatically when a
 trusted oracle reports a condition met, plus a Next.js frontend for buying
 policies, reporting oracle data, tracking a policy's status, and managing
-the payout pool. See `QUICKSTART.md` for the general install/deploy/test
-flow — this file covers what's specific to this template.
+the payout pool.
 
 ## 1. Install dependencies
 
 ```
 pnpm/npm install
 ```
+
+If you picked `pnpm` or `yarn` and don't have it yet, install it globally
+first, then re-run the install:
+
+```
+npm install -g pnpm   # or: npm install -g yarn
+pnpm install           # or: yarn install
 
 ## 2. Configure environment variables
 
@@ -30,7 +36,13 @@ npm run dev
 This starts a local Hardhat node and the Next.js frontend on
 http://localhost:3000.
 
-## 4. Deploy the contract
+## 4. Run the tests
+
+```
+npm run test
+```
+
+## 5. Deploy the contract
 
 ```
 npm run deploy:testnet
@@ -39,7 +51,7 @@ npm run deploy:testnet
 The contract address and ABI are written to `packages/shared/src/contracts.ts`
 automatically — refresh the frontend and it picks up the deployment.
 
-## 5. Try it out
+## 6. Try it out
 
 1. Open http://localhost:3000 and connect the wallet you deployed with (it's
    both the owner and, initially, the oracle).
@@ -58,6 +70,21 @@ automatically — refresh the frontend and it picks up the deployment.
 6. If a policy's coverage window passes without ever triggering, anyone can
    call **Expire policy** from the lookup panel — the premium stays with
    the pool.
+
+## 7. Verify on MSTScan (optional)
+
+```
+npm run verify:testnet
+```
+
+## 8. Ship to mainnet
+
+```
+npm run deploy:mainnet
+```
+
+You'll be asked to type a confirmation phrase before anything is sent to
+mainnet.
 
 ## How the automation actually works
 

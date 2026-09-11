@@ -9,7 +9,7 @@ import { scaffoldProject } from "./copyTemplate.js";
 import { installDependencies } from "./installDeps.js";
 import { isGitAvailable, initGitRepo } from "./git.js";
 import { parseArgs } from "./args.js";
-import { pinPackageManager } from "./packageManager.js";
+import { pinPackageManager, isPackageManagerInstalled, SUPPORTED_PACKAGE_MANAGERS } from "./packageManager.js";
 
 const HELP = `
 ${pc.bold("create-mst-app")} — scaffold a full-stack MST blockchain project
@@ -37,6 +37,12 @@ export async function run(argv) {
   if (args.template && !getTemplate(args.template)) {
     throw new Error(
       `Unknown template "${args.template}". Choose one of: ${TEMPLATES.map((t) => t.id).join(", ")}`
+    );
+  }
+
+  if (args.pm && !SUPPORTED_PACKAGE_MANAGERS.includes(args.pm)) {
+    throw new Error(
+      `Unsupported package manager "${args.pm}". Use ${SUPPORTED_PACKAGE_MANAGERS.join(", ")}.`
     );
   }
 
@@ -85,7 +91,17 @@ export async function run(argv) {
   fs.copyFileSync(path.join(targetDir, ".env.example"), path.join(targetDir, ".env.local"));
   pinPackageManager(targetDir, opts.packageManager);
 
-  if (!args.skipInstall) {
+  if (!args.skipInstall && opts.packageManager !== "npm" && !isPackageManagerInstalled(opts.packageManager)) {
+    console.log(
+      pc.yellow(
+        `\n⚠ ${opts.packageManager} isn't installed (or isn't on PATH), so dependencies weren't installed.\n` +
+          `  Install it first:\n\n` +
+          `    npm install -g ${opts.packageManager}\n\n` +
+          `  Then run:\n\n` +
+          `    cd ${opts.projectName} && ${opts.packageManager} install\n`
+      )
+    );
+  } else if (!args.skipInstall) {
     console.log(`\nInstalling dependencies with ${pc.bold(opts.packageManager)}...\n`);
     const ok = installDependencies(targetDir, opts.packageManager);
     if (ok) {

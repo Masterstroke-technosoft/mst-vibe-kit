@@ -134,6 +134,13 @@ cd ../frontend && npm install
 ```bash
 cd packages/contracts
 
+If you picked `pnpm` or `yarn` and don't have it yet, install it globally
+first, then re-run the install:
+
+```
+npm install -g pnpm   # or: npm install -g yarn
+pnpm install           # or: yarn install
+
 # Deploy to testnet
 npm run deploy:testnet
 

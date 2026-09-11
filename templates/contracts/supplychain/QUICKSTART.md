@@ -1,18 +1,23 @@
-# Supply Chain Transparency — Startup Guide
+# QUICKSTART
 
 This project was scaffolded with the **supplychain** template: a
 `SupplyChain` custody registry — product registration, custody handoffs,
 and inspection/certification/delivery checkpoints, all immutable on-chain
 events — plus a Next.js frontend for participants and a public
 `/track/[productId]` page anyone can use to trace a product's full history.
-See `QUICKSTART.md` for the general install/deploy/test flow — this file
-covers what's specific to this template.
 
 ## 1. Install dependencies
 
 ```
 pnpm/npm install
 ```
+
+If you picked `pnpm` or `yarn` and don't have it yet, install it globally
+first, then re-run the install:
+
+```
+npm install -g pnpm   # or: npm install -g yarn
+pnpm install           # or: yarn install
 
 ## 2. Configure environment variables
 
@@ -30,7 +35,13 @@ npm run dev
 This starts a local Hardhat node and the Next.js frontend on
 http://localhost:3000.
 
-## 4. Deploy the contract
+## 4. Run the tests
+
+```
+npm run test
+```
+
+## 5. Deploy the contract
 
 ```
 npm run deploy:testnet
@@ -39,7 +50,7 @@ npm run deploy:testnet
 The contract address and ABI are written to `packages/shared/src/contracts.ts`
 automatically — refresh the frontend and it picks up the deployment.
 
-## 5. Owner vs. participant — who can do what
+## 6. Owner vs. participant — who can do what
 
 - **Owner** — set once at deploy time (transferable via standard
   `Ownable`). Only the owner can recall a product, pause the contract, and
@@ -53,7 +64,7 @@ automatically — refresh the frontend and it picks up the deployment.
 
 Manage this from the **Participants** panel (owner-only).
 
-## 6. Try it out
+## 7. Try it out
 
 1. Open http://localhost:3000 and connect the wallet you deployed with
    (it's both the owner and, by default, a participant).
@@ -74,6 +85,21 @@ Manage this from the **Participants** panel (owner-only).
    **Recall** it from the same panel — the history stays on-chain, but
    `recalled` flips to true and no further transfers or checkpoints are
    accepted.
+
+## 8. Verify on MSTScan (optional)
+
+```
+npm run verify:testnet
+```
+
+## 9. Ship to mainnet
+
+```
+npm run deploy:mainnet
+```
+
+You'll be asked to type a confirmation phrase before anything is sent to
+mainnet.
 
 ## How traceability actually works
 
