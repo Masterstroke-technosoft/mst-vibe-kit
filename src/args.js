@@ -4,10 +4,14 @@ export function parseArgs(argv) {
     template: undefined,
     pm: undefined,
     git: undefined,
+    gitConflict: false,
     skipInstall: false,
     yes: false,
     help: false,
   };
+
+  let sawGit = false;
+  let sawNoGit = false;
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -28,9 +32,11 @@ export function parseArgs(argv) {
         break;
       case "--git":
         result.git = true;
+        sawGit = true;
         break;
       case "--no-git":
         result.git = false;
+        sawNoGit = true;
         break;
       case "--skip-install":
         result.skipInstall = true;
@@ -41,6 +47,10 @@ export function parseArgs(argv) {
         }
     }
   }
+
+  // Both flags were passed — which one "wins" is ambiguous, so surface it
+  // as a conflict instead of silently letting the last one take effect.
+  result.gitConflict = sawGit && sawNoGit;
 
   return result;
 }

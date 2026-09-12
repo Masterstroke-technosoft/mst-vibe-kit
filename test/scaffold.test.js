@@ -136,7 +136,7 @@ for (const template of TEMPLATES) {
     assert.ok(!JSON.stringify(pkg).includes("{{PROJECT_NAME}}"));
 
     const layout = fs.readFileSync(
-      path.join(targetDir, "packages/frontend/app/layout.tsx"),
+      path.join(targetDir, "packages/frontend/app/layout.tsx"),  
       "utf8"
     );
     assert.ok(!layout.includes("{{PROJECT_NAME}}"));
@@ -214,4 +214,13 @@ test("parses CLI args", () => {
   assert.equal(args.pm, "npm");
   assert.equal(args.git, false);
   assert.equal(args.yes, true);
+  assert.equal(args.gitConflict, false);
+});
+
+test("flags --git and --no-git used together as a conflict", () => {
+  const args = parseArgs(["my-app", "--git", "--no-git"]);
+  assert.equal(args.gitConflict, true);
+
+  const reversed = parseArgs(["my-app", "--no-git", "--git"]);
+  assert.equal(reversed.gitConflict, true);
 });

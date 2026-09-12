@@ -46,6 +46,10 @@ export async function run(argv) {
     );
   }
 
+  if (args.gitConflict) {
+    throw new Error("--git and --no-git cannot be used together.");
+  }
+
   const defaults = {
     projectName: args.projectName,
     templateId: args.template,
